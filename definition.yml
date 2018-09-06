@@ -1,5 +1,6 @@
 id: monocle_ddrtree
 docker_repository: dynverse/ti_monocle_ddrtree
+singularity_collection: 1555
 container_url: https://github.com/dynverse/ti_monocle_ddrtree
 name: Monocle DDRTree
 type: algorithm
