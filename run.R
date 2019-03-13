@@ -1,10 +1,10 @@
 #!/usr/local/bin/Rscript
 
 task <- dyncli::main()
-task <- dyncli::main(
-  c("--dataset", "/code/example.h5", "--output", "./output.h5"),
-  "/code/definition.yml"
-)
+#task <- dyncli::main(
+#  c("--dataset", "/code/example.h5", "--output", "./output.h5"),
+#  "/code/definition.yml"
+#)
 
 library(jsonlite)
 library(readr)
