@@ -2,12 +2,10 @@
 
 task <- dyncli::main()
 
-library(jsonlite)
-library(readr)
-library(dplyr)
-library(purrr)
-
-library(monocle)
+library(dplyr, warn.conflicts = FALSE)
+library(purrr, warn.conflicts = FALSE)
+library(dynwrap, warn.conflicts = FALSE)
+library(monocle, warn.conflicts = FALSE)
 
 #   ____________________________________________________________________________
 #   Load data                                                               ####
@@ -102,7 +100,8 @@ edge_df <- cds %>%
 #   ____________________________________________________________________________
 #   Save output                                                             ####
 
-output <- dynwrap::wrap_data(cell_ids = rownames(dimred)) %>%
+output <- 
+  dynwrap::wrap_data(cell_ids = rownames(dimred)) %>%
   dynwrap::add_cell_graph(
     cell_graph = cell_graph,
     to_keep = to_keep
