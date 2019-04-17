@@ -111,10 +111,7 @@ dimred_segment_progressions <-
   dimred_segments %>% 
   select(from, to, percentage)
 
-dimred_path <- 
-  Matrix::t(monocle::reducedDimK(cds)) %>%
-  as.data.frame()
-print(dimred_path)
+dimred_path <- t(monocle::reducedDimK(cds))
 
 dimred_segment_points <- 
   dimred_path[dimred_segments$path, , drop = FALSE]
