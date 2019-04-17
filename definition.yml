@@ -44,8 +44,8 @@ wrapper:
 parameters:
   - id: reduction_method
     type: character
-    default: ICA
-    values: ICA
+    default: DDRTree
+    values: DDRTree
     description: A character string specifying the algorithm to use for dimensionality
       reduction.
   - id: max_components

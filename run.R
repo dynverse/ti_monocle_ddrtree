@@ -65,7 +65,7 @@ cds <- monocle::orderCells(cds)
 checkpoints$method_aftermethod <- as.numeric(Sys.time())
 
 # extract the igraph and which cells are on the trajectory
-gr <- cds@auxOrderingData[[parameters$reduction_method]]$cell_ordering_tree
+gr <- cds@auxOrderingData[[parameters$reduction_method]]$pr_graph_cell_proj_tree
 to_keep <- setNames(rep(TRUE, nrow(counts)), rownames(counts))
 
 # convert to milestone representation
