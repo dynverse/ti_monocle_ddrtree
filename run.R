@@ -65,7 +65,7 @@ cds <- monocle::orderCells(cds)
 checkpoints$method_aftermethod <- as.numeric(Sys.time())
 
 # extract the igraph and which cells are on the trajectory
-gr <- cds@auxOrderingData[[parameters$reduction_method]]$pr_graph_cell_proj_tree
+gr <- monocle::minSpanningTree(cds)
 to_keep <- setNames(rep(TRUE, nrow(counts)), rownames(counts))
 
 # convert to milestone representation
@@ -104,7 +104,7 @@ dimred_segments <-
   rowwise() %>%
   mutate(
     path = igraph::shortest_paths(gr, from_cell, to_cell, mode = "out")$vpath %>% map(names),
-    percentage = list(dynwrap::calculate_geodesic_distances(output, waypoint_cells = from_cell)[1, path] / length)
+    percentage = list(seq(0, 1, length.out = length(path)))
   ) %>%
   unnest(path, percentage) %>% 
   ungroup() 
