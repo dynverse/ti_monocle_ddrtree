@@ -96,17 +96,32 @@ output <-
 dimred <- t(cds@reducedDimS)
 colnames(dimred) <- paste0("Comp", seq_len(ncol(dimred)))
 
+
+dimred_segments <-
+  output$milestone_network %>%
+  mutate(from_cell = gsub("milestone_", "", from), to_cell = gsub("milestone_", "", to)) %>% 
+  as_tibble() %>% 
+  rowwise() %>%
+  mutate(
+    path = igraph::shortest_paths(gr, from_cell, to_cell, mode = "out")$vpath %>% map(names),
+    percentage = list(dynwrap::calculate_geodesic_distances(output, waypoint_cells = from_cell)[1, path] / length)
+  ) %>%
+  unnest(path, percentage) %>% 
+  ungroup() 
+
 dimred_segment_progressions <- 
-  output$progressions %>% 
+  dimred_segments %>% 
   select(from, to, percentage)
 
 dimred_segment_points <- 
-  t(monocle::reducedDimK(cds))
-colnames(dimred_segment_points) <- paste0("Comp", seq_len(ncol(dimred_segment_points)))
+  t(monocle::reducedDimK(cds))[dimred_segments$path, , drop = FALSE]
+rownames(dimred_segment_points) <- NULL
+colnames(dimred_segment_points) <- colnames(dimred)
 
 dimred_milestones <- 
-  dimred_segment_points[gsub("milestone_", "", output$milestone_ids), , drop = FALSE]
+  t(monocle::reducedDimK(cds))[gsub("milestone_", "", output$milestone_ids), , drop = FALSE]
 rownames(dimred_milestones) <- output$milestone_ids
+colnames(dimred_milestones) <- colnames(dimred)
 
 # add dimred
 output <- 
