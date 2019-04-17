@@ -3,6 +3,7 @@
 task <- dyncli::main()
 
 library(dplyr, warn.conflicts = FALSE)
+library(tidyr, warn.conflicts = FALSE)
 library(purrr, warn.conflicts = FALSE)
 library(dynwrap, warn.conflicts = FALSE)
 library(monocle, warn.conflicts = FALSE)
@@ -39,8 +40,6 @@ if (parameters$filter_features) {
   disp_table <- dispersionTable(cds)
   ordering_genes <- subset(disp_table, mean_expression >= parameters$filter_features_mean_expression)
   cds <- setOrderingFilter(cds, ordering_genes)
-  
-  print(nrow(ordering_genes))
 }
 
 # if low # cells or features, do not select the number of cluster centers automatically -> https://github.com/cole-trapnell-lab/monocle-release/issues/26
@@ -96,7 +95,6 @@ output <-
 dimred <- t(cds@reducedDimS)
 colnames(dimred) <- paste0("Comp", seq_len(ncol(dimred)))
 
-
 dimred_segments <-
   output$milestone_network %>%
   mutate(from_cell = gsub("milestone_", "", from), to_cell = gsub("milestone_", "", to)) %>% 
@@ -113,13 +111,18 @@ dimred_segment_progressions <-
   dimred_segments %>% 
   select(from, to, percentage)
 
+dimred_path <- 
+  Matrix::t(monocle::reducedDimK(cds)) %>%
+  as.data.frame()
+print(dimred_path)
+
 dimred_segment_points <- 
-  t(monocle::reducedDimK(cds))[dimred_segments$path, , drop = FALSE]
+  dimred_path[dimred_segments$path, , drop = FALSE]
 rownames(dimred_segment_points) <- NULL
 colnames(dimred_segment_points) <- colnames(dimred)
 
 dimred_milestones <- 
-  t(monocle::reducedDimK(cds))[gsub("milestone_", "", output$milestone_ids), , drop = FALSE]
+  dimred_path[gsub("milestone_", "", output$milestone_ids), , drop = FALSE]
 rownames(dimred_milestones) <- output$milestone_ids
 colnames(dimred_milestones) <- colnames(dimred)
 
