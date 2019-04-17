@@ -39,7 +39,7 @@ if (parameters$filter_features) {
   disp_table <- dispersionTable(cds)
   ordering_genes <- subset(disp_table, mean_expression >= parameters$filter_features_mean_expression)
   cds <- setOrderingFilter(cds, ordering_genes)
-
+  
   print(nrow(ordering_genes))
 }
 
@@ -79,35 +79,44 @@ if ("weight" %in% colnames(cell_graph)) {
 
 cell_graph <- cell_graph %>% select(from, to, length, directed)
 
-dimred <- t(cds@reducedDimS)
-colnames(dimred) <- paste0("Comp", seq_len(ncol(dimred)))
-
-
-reduced_dim_coords <- monocle::reducedDimK(cds)
-space_df <- reduced_dim_coords %>%
-  as.data.frame() %>%
-  magrittr::set_colnames(c("prin_graph_dim_1", "prin_graph_dim_2")) %>%
-  mutate(sample_name = rownames(.), sample_state = rownames(.))
-
-edge_df <- cds %>%
-  monocle::minSpanningTree() %>%
-  igraph::as_data_frame() %>%
-  select_(source = "from", target = "to") %>%
-  left_join(space_df %>% select_(source="sample_name", source_prin_graph_dim_1="prin_graph_dim_1", source_prin_graph_dim_2="prin_graph_dim_2"), by = "source") %>%
-  left_join(space_df %>% select_(target="sample_name", target_prin_graph_dim_1="prin_graph_dim_1", target_prin_graph_dim_2="prin_graph_dim_2"), by = "target")
-
-
 #   ____________________________________________________________________________
 #   Save output                                                             ####
 
+# create trajectory
 output <- 
-  dynwrap::wrap_data(cell_ids = rownames(dimred)) %>%
+  dynwrap::wrap_data(cell_ids = colnames(cds)) %>%
   dynwrap::add_cell_graph(
     cell_graph = cell_graph,
     to_keep = to_keep
   ) %>%
-  dynwrap::add_dimred(dimred) %>%
   dynwrap::add_root(root_cell_id = cds@auxOrderingData[[parameters$reduction_method]]$root_cell) %>%
   dynwrap::add_timings(checkpoints)
 
+# construct dimreds
+dimred <- t(cds@reducedDimS)
+colnames(dimred) <- paste0("Comp", seq_len(ncol(dimred)))
+
+dimred_segment_progressions <- 
+  output$progressions %>% 
+  select(from, to, percentage)
+
+dimred_segment_points <- 
+  t(monocle::reducedDimK(cds))
+colnames(dimred_segment_points) <- paste0("Comp", seq_len(ncol(dimred_segment_points)))
+
+dimred_milestones <- 
+  dimred_segment_points[gsub("milestone_", "", output$milestone_ids), , drop = FALSE]
+rownames(dimred_milestones) <- output$milestone_ids
+
+# add dimred
+output <- 
+  output %>% 
+  dynwrap::add_dimred(
+    dimred = dimred,
+    dimred_milestones = dimred_milestones,
+    dimred_segment_progressions = dimred_segment_progressions,
+    dimred_segment_points = dimred_segment_points
+  )
+
+# write to file
 dyncli::write_output(output, task$output)
